@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>WebAR Spritesheet Animation</title>
+    
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.2.0/dist/aframe-extras.min.js"></script>
+
+    <script>
+      AFRAME.registerComponent('sprite-sheet', {
+        schema: {
+          cols: {type: 'number', default: 1},
+          rows: {type: 'number', default: 1},
+          totalFrames: {type: 'number', default: 1},
+          fps: {type: 'number', default: 24},
+          loop: {type: 'boolean', default: true}
+        },
+        init: function () {
+          this.timer = 0;
+          this.currentFrame = 0;
+          // Acessa a textura (imagem) do material do objeto
+          this.mesh = this.el.getObject3D('mesh');
+          if (!this.mesh || !this.mesh.material.map) return;
+          
+          this.texture = this.mesh.material.map;
+          // Configura o tamanho do recorte (tile)
+          this.texture.repeat.set(1 / this.data.cols, 1 / this.data.rows);
+          this.updateOffset();
+        },
+        tick: function (time, timeDelta) {
+          if (!this.texture) return;
+
+          this.timer += timeDelta;
+          // Controle de FPS
+          if (this.timer > 1000 / this.data.fps) {
+            this.currentFrame++;
+            
+            if (this.currentFrame >= this.data.totalFrames) {
+              if (this.data.loop) {
+                this.currentFrame = 0;
+              } else {
+                this.currentFrame = this.data.totalFrames - 1;
+              }
+            }
+            
+            this.updateOffset();
+            this.timer = 0;
+          }
+        },
+        updateOffset: function () {
+          const col = this.currentFrame % this.data.cols;
+          const row = Math.floor(this.currentFrame / this.data.cols);
+          
+          // Calcula o deslocamento X e Y (Y é invertido em texturas WebGL)
+          this.texture.offset.x = col / this.data.cols;
+          this.texture.offset.y = (this.data.rows - 1 - row) / this.data.rows;
+        }
+      });
+    </script>
+</head>
+
+<body>
+    <a-scene 
+      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001;" 
+      color-space="sRGB" 
+      renderer="colorManagement: true, physicallyCorrectLights" 
+      vr-mode-ui="enabled: false" 
+      device-orientation-permission-ui="enabled: false">
+
+        <a-assets>
+            <img id="animacao" src="./animacao.png" crossorigin="anonymous">
+        </a-assets>
+
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <a-entity mindar-image-target="targetIndex: 0">
+            
+            <a-image 
+                src="#animacao" 
+                position="0 0 0" 
+                scale="1 1 1" 
+                rotation="0 0 0" 
+                alpha-test="0.5"
+                sprite-sheet="cols: 5; rows: 6; totalFrames: 26; fps: 24; loop: true">
+            </a-image>
+            
+        </a-entity>
+    </a-scene>
+</body>
+</html>
