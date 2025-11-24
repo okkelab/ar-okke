@@ -1,2 +1,2 @@
 # ar-okkebomb
-Augmented Reality animation created by Klara Kopi for the Okke Bomb t-shirt by Okke Lab (2025)
+Augmented Reality animation created by Klara Kopi @klarakopi for the Okke Bomb t-shirt by Okke Lab (2025)
