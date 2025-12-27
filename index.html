@@ -2,8 +2,8 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>WebAR Multitarget Spritesheet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>WebAR Multitarget Spritesheet - OKKE LAB</title>
     
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -22,34 +22,35 @@
           this.currentFrame = 0;
           this.textureLoaded = false;
 
-          // Função auxiliar para configurar a textura assim que estiver disponível
+          // Função para configurar a repetição inicial da textura
           this.setupTexture = () => {
             this.mesh = this.el.getObject3D('mesh');
-            // Verifica se a malha e o mapa de textura existem
             if (this.mesh && this.mesh.material.map) {
                 this.texture = this.mesh.material.map;
-                // Configura a repetição (tiling) da textura baseado nas colunas e linhas
+                // Define o tamanho do "tile" baseado nas colunas/linhas
                 this.texture.repeat.set(1 / this.data.cols, 1 / this.data.rows);
-                // Aplica o offset inicial
+                // Aplica o primeiro frame
                 this.updateOffset();
                 this.textureLoaded = true;
+                // Garante que a transparência funcione bem
+                this.mesh.material.transparent = true;
+                this.mesh.material.needsUpdate = true;
             }
           };
 
-          // Tenta configurar imediatamente (caso esteja em cache)
+          // Tenta configurar imediatamente
           this.setupTexture();
 
-          // Se não, adiciona um ouvinte para quando a textura terminar de carregar
+          // Adiciona listener para garantir que rode se a textura demorar a carregar
           this.el.addEventListener('materialtextureloaded', () => {
               this.setupTexture();
           });
         },
         tick: function (time, timeDelta) {
-          // Se a textura não carregou, não faz nada
           if (!this.textureLoaded || !this.texture) return;
 
           this.timer += timeDelta;
-          // Controle de FPS usando o delta time
+          // Controle de tempo baseado no FPS desejado
           if (this.timer > 1000 / this.data.fps) {
             this.currentFrame++;
             
@@ -58,7 +59,7 @@
               if (this.data.loop) {
                 this.currentFrame = 0;
               } else {
-                this.currentFrame = this.data.totalFrames - 1; // Para no último frame se loop for false
+                this.currentFrame = this.data.totalFrames - 1;
               }
             }
             
@@ -67,55 +68,92 @@
           }
         },
         updateOffset: function () {
-           // Cálculo matemático para mover a "janela" de visualização da textura
+           // Cálculo da posição X e Y do frame atual na grade
           const col = this.currentFrame % this.data.cols;
           const row = Math.floor(this.currentFrame / this.data.cols);
           
           this.texture.offset.x = col / this.data.cols;
-          // Inversão do eixo Y necessária para coordenadas de textura WebGL
+          // Inverte o eixo Y porque as coordenadas UV começam de baixo para cima
           this.texture.offset.y = (this.data.rows - 1 - row) / this.data.rows;
         }
       });
     </script>
+    
+    <style>
+      body { margin: 0; }
+      /* Esconde o botão de "Start AR" padrão do A-Frame se ele aparecer */
+      .a-enter-vr-button { display: none; }
+    </style>
 </head>
 
 <body>
     <a-scene 
-      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001;" 
+      mindar-image="imageTargetSrc: ./targets.mind; filterMinCF:0.0001; filterBeta: 0.001; warmupTolerance: 5; missTolerance: 5;" 
       color-space="sRGB" 
-      renderer="colorManagement: true, physicallyCorrectLights" 
+      renderer="colorManagement: true, physicallyCorrectLights, antialias: true" 
       vr-mode-ui="enabled: false" 
       device-orientation-permission-ui="enabled: false">
 
         <a-assets>
             <img id="tex-anim0" src="./animacao0.png" crossorigin="anonymous">
             <img id="tex-anim1" src="./animacao1.png" crossorigin="anonymous">
-            </a-assets>
+        </a-assets>
 
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
 
         <a-entity mindar-image-target="targetIndex: 0">
             <a-image 
                 src="#tex-anim0" 
                 position="0 0 0" 
-                scale="1.437 1 1" 
+                scale="1 1 1" 
                 rotation="0 0 0" 
                 alpha-test="0.5"
                 sprite-sheet="cols: 5; rows: 6; totalFrames: 26; fps: 24; loop: true">
             </a-image>
         </a-entity>
 
+
         <a-entity mindar-image-target="targetIndex: 1">
             <a-image 
                 src="#tex-anim1" 
                 position="0 0 0" 
-                scale="0.905 1 1" 
-                rotation="0 0 0" 
+                scale="1 1 1"
                 alpha-test="0.5"
                 sprite-sheet="cols: 5; rows: 4; totalFrames: 16; fps: 24; loop: true">
             </a-image>
         </a-entity>
 
-        </a-scene>
+        <a-entity mindar-image-target="targetIndex: 2">
+            <a-image 
+                src="#tex-anim1" 
+                position="0 0 0" 
+                scale="1 1 1"
+                alpha-test="0.5"
+                sprite-sheet="cols: 5; rows: 4; totalFrames: 16; fps: 24; loop: true">
+            </a-image>
+        </a-entity>
+
+        <a-entity mindar-image-target="targetIndex: 3">
+            <a-image 
+                src="#tex-anim1" 
+                position="0 0 0" 
+                scale="1 1 1"
+                alpha-test="0.5"
+                sprite-sheet="cols: 5; rows: 4; totalFrames: 16; fps: 24; loop: true">
+            </a-image>
+        </a-entity>
+
+        <a-entity mindar-image-target="targetIndex: 4">
+            <a-image 
+                src="#tex-anim1" 
+                position="0 0 0" 
+                scale="1 1 1"
+                alpha-test="0.5"
+                sprite-sheet="cols: 5; rows: 4; totalFrames: 16; fps: 24; loop: true">
+            </a-image>
+        </a-entity>
+
+    </a-scene>
 </body>
 </html>
